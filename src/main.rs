@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use depth_first::{Map, depth_first_search};
 use rand::Rng;
 
-const MAP_SIZE: usize = 8;
+const MAP_SIZE: usize = 16;
 const MAP_SCALE: f32 = 16.0;
 
 #[derive(Resource)]
