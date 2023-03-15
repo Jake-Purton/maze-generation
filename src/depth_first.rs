@@ -137,3 +137,52 @@ pub fn depth_first_search (
 
     }
 }
+
+pub fn data_from_map (
+    map: Map,
+) -> Vec<u8> {    
+
+    let mut image: Vec<u8> = Vec::new();
+
+    for (_, cells) in map.map.iter().enumerate() {
+
+        for i in 0..8 {       
+            for cell in cells {
+                for a in 0..8 {
+                    if i == 0 && cell.top {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                    } else if i == 7 && cell.bottom {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                    } else if a == 0 && cell.left {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                    } else if a == 7 && cell.right {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                    } else if (a == 7 || a == 0) && (i == 7 || i == 0)  {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                    } else {
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(0);
+                    }
+                }
+            }
+        }
+    }
+    image
+} 

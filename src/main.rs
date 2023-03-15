@@ -1,14 +1,14 @@
 mod depth_first;
 
-use bevy::prelude::*;
-use depth_first::{Map, depth_first_search};
+use bevy::{prelude::*, render::{texture::ImageSampler, render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages}}};
+use depth_first::{Map, depth_first_search, data_from_map};
 use rand::Rng;
 
 const MAP_SIZE: usize = 16;
-const MAP_SCALE: f32 = 16.0;
+const SCREEN_SIZE: Vec2 = Vec2 { x: 800.0, y: 800.0 };
 
 #[derive(Resource)]
-pub struct MazeMap(Map);
+pub struct MazeMap(Vec<u8>);
 
 fn main() {
 
@@ -17,77 +17,61 @@ fn main() {
     let y = rand::thread_rng().gen_range(0..MAP_SIZE);
     depth_first_search(&mut map, x, y, None);
 
-    startup_draw_map_system(map);
+    let image_data = data_from_map(map);
 
     App::new()
         .insert_resource(Msaa { samples: 4 })
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                width: 800.0,
-                height: 800.0,
-                title: "To do".to_string(),
-                resizable: false,
-                ..Default::default()
-            },
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        width: SCREEN_SIZE.x,
+                        height: SCREEN_SIZE.y,
+                        title: "To do".to_string(),
+                        resizable: false,
+                        ..Default::default()
+                    },
+                    ..default()
+                })
+                .set(ImagePlugin {
+                    default_sampler: ImageSampler::nearest_descriptor(),
+                }),
+        )
+        .insert_resource(MazeMap(image_data))
         .insert_resource(ClearColor(Color::BLACK))
         .add_startup_system(setup)
         .run();
 }
 
-fn startup_draw_map_system (
-    map: Map,
-) {    
-
-    let mut image: Vec<u8> = Vec::new();
-
-    for (_, cells) in map.map.iter().enumerate() {
-
-        for i in 0..8 {       
-            for cell in cells {
-                for a in 0..8 {
-                    if i == 0 && cell.top {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if i == 7 && cell.bottom {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if a == 0 && cell.left {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if a == 7 && cell.right {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(0);
-                    }
-                }
-            }
-        }
-    }
-
-
-    for (i, num) in image.iter().enumerate() {
-        
-        if (i + 1) % 4 == 0 {
-            println!("{num}")
-        }
-    }
-} 
-
-fn setup(mut commands: Commands) {
+fn setup(
+    mut commands: Commands,
+    data: Res<MazeMap>,
+    mut images: ResMut<Assets<Image>>,
+) {
     commands
         .spawn(Camera2dBundle::default());
+
+    let mut image = Image::new(
+        Extent3d {
+            width: (MAP_SIZE * 8) as u32,
+            height: (MAP_SIZE * 8) as u32,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2, 
+        data.0.clone(), 
+        TextureFormat::Rgba8Unorm,
+    );
+    image.texture_descriptor.usage =
+        TextureUsages::COPY_DST | TextureUsages::STORAGE_BINDING | TextureUsages::TEXTURE_BINDING;
+
+    let image = images.add(image.clone());
+    
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            custom_size: Some(SCREEN_SIZE),
+            ..default()
+        },
+        texture: image,
+        ..default()
+    });
 }
