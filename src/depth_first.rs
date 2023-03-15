@@ -11,7 +11,13 @@ pub struct Cell {
 
 impl Cell {
     fn new() -> Self {
-        Self { visited: false, top: true, right: true, bottom: true, left: true }
+        Self {
+            visited: false,
+            top: true,
+            right: true,
+            bottom: true,
+            left: true,
+        }
     }
 }
 
@@ -41,39 +47,45 @@ pub struct Map {
 
 impl Map {
     pub fn new(size: usize) -> Self {
-        Self { map: vec![vec![Cell::new(); size]; size], size }
+        Self {
+            map: vec![vec![Cell::new(); size]; size],
+            size,
+        }
     }
     fn right(&self, x: usize, y: usize) -> Option<Cell> {
-        if self.size <= x + 1  {
+        if self.size <= x + 1 {
             None
         } else {
             Some(self.map[y][x + 1])
         }
     }
     fn left(&self, x: usize, y: usize) -> Option<Cell> {
-        if x == 0  {
+        if x == 0 {
             None
         } else {
             Some(self.map[y][x - 1])
         }
     }
     fn top(&self, x: usize, y: usize) -> Option<Cell> {
-        if y == 0  {
+        if y == 0 {
             None
         } else {
             Some(self.map[y - 1][x])
         }
     }
     fn bottom(&self, x: usize, y: usize) -> Option<Cell> {
-        if self.size <= y + 1  {
+        if self.size <= y + 1 {
             None
         } else {
             Some(self.map[y + 1][x])
         }
     }
 
-    fn has_unvisited_neighbors (&self, x: usize, y: usize) -> Option<Vec<(usize, usize, WallDirection)>> {
-
+    fn has_unvisited_neighbors(
+        &self,
+        x: usize,
+        y: usize,
+    ) -> Option<Vec<(usize, usize, WallDirection)>> {
         let mut vec = Vec::new();
 
         if let Some(cell) = self.left(x, y) {
@@ -105,12 +117,7 @@ impl Map {
     }
 }
 
-pub fn depth_first_search (
-    map: &mut Map,
-    x: usize,
-    y: usize,
-    wall: Option<WallDirection>,
-) {
+pub fn depth_first_search(map: &mut Map, x: usize, y: usize, wall: Option<WallDirection>) {
     map.map[y][x].visited = true;
 
     if let Some(wall) = wall {
@@ -123,7 +130,6 @@ pub fn depth_first_search (
     }
 
     while let Some(neighbors) = map.has_unvisited_neighbors(x, y) {
-
         let neighbor = neighbors[rand::thread_rng().gen_range(0..neighbors.len())];
 
         match neighbor.2 {
@@ -134,42 +140,22 @@ pub fn depth_first_search (
         }
 
         depth_first_search(map, neighbor.0, neighbor.1, Some(neighbor.2.opposite()))
-
     }
 }
 
-pub fn data_from_map (
-    map: Map,
-) -> Vec<u8> {    
-
+pub fn data_from_map(map: &Map) -> Vec<u8> {
     let mut image: Vec<u8> = Vec::new();
 
     for (_, cells) in map.map.iter().enumerate() {
-
-        for i in 0..8 {       
+        for i in 0..8 {
             for cell in cells {
                 for a in 0..8 {
-                    if i == 0 && cell.top {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if i == 7 && cell.bottom {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if a == 0 && cell.left {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if a == 7 && cell.right {
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                        image.push(255);
-                    } else if (a == 7 || a == 0) && (i == 7 || i == 0)  {
+                    if (i == 0 && cell.top)
+                        || (i == 7 && cell.bottom)
+                        || (a == 0 && cell.left)
+                        || (a == 7 && cell.right)
+                        || ((a == 7 || a == 0) && (i == 7 || i == 0))
+                    {
                         image.push(255);
                         image.push(255);
                         image.push(255);
@@ -185,4 +171,4 @@ pub fn data_from_map (
         }
     }
     image
-} 
+}
