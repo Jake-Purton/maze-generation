@@ -40,42 +40,50 @@ fn startup_draw_map_system (
     map: Map,
 ) {    
 
-    let mut image: Vec<Vec<[u8; 4]>> = Vec::new();
+    let mut image: Vec<u8> = Vec::new();
 
     for (_, cells) in map.map.iter().enumerate() {
 
         for i in 0..8 {       
-            let mut row: Vec<[u8; 4]> = Vec::new();
             for cell in cells {
                 for a in 0..8 {
                     if i == 0 && cell.top {
-                        row.push([255, 255, 255, 255]);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
                     } else if i == 7 && cell.bottom {
-                        row.push([255, 255, 255, 255]);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
                     } else if a == 0 && cell.left {
-                        row.push([255, 255, 255, 255]);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
                     } else if a == 7 && cell.right {
-                        row.push([255, 255, 255, 255]);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
                     } else {
-                        row.push([255, 255, 255, 0]);
+                        image.push(255);
+                        image.push(255);
+                        image.push(255);
+                        image.push(0);
                     }
                 }
             }
-            image.push(row);
         }
     }
 
 
-    for i in image {
-        let mut string = String::new();
-        for a in i {
-            if a[3] == 255 {
-                string.push('#');
-            } else {
-                string.push(' ');
-            }
+    for (i, num) in image.iter().enumerate() {
+        
+        if (i + 1) % 4 == 0 {
+            println!("{num}")
         }
-        println!("{string}")
     }
 } 
 
