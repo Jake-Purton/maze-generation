@@ -3,10 +3,10 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug)]
 pub struct Cell {
     visited: bool,
-    top: bool,
-    right: bool,
-    bottom: bool,
-    left: bool,
+    pub top: bool,
+    pub right: bool,
+    pub bottom: bool,
+    pub left: bool,
 }
 
 impl Cell {
@@ -23,8 +23,19 @@ pub enum WallDirection {
     Left,
 }
 
+impl WallDirection {
+    fn opposite(self) -> WallDirection {
+        match self {
+            WallDirection::Top => WallDirection::Bottom,
+            WallDirection::Right => WallDirection::Left,
+            WallDirection::Bottom => WallDirection::Top,
+            WallDirection::Left => WallDirection::Right,
+        }
+    }
+}
+
 pub struct Map {
-    map: Vec<Vec<Cell>>,
+    pub map: Vec<Vec<Cell>>,
     size: usize,
 }
 
@@ -114,7 +125,15 @@ pub fn depth_first_search (
     while let Some(neighbors) = map.has_unvisited_neighbors(x, y) {
 
         let neighbor = neighbors[rand::thread_rng().gen_range(0..neighbors.len())];
-        depth_first_search(map, neighbor.0, neighbor.1, Some(neighbor.2))
+
+        match neighbor.2 {
+            WallDirection::Top => map.map[y][x].top = false,
+            WallDirection::Right => map.map[y][x].right = false,
+            WallDirection::Bottom => map.map[y][x].bottom = false,
+            WallDirection::Left => map.map[y][x].left = false,
+        }
+
+        depth_first_search(map, neighbor.0, neighbor.1, Some(neighbor.2.opposite()))
 
     }
 }
