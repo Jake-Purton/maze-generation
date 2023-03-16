@@ -2,10 +2,12 @@ mod a_star;
 mod depth_first;
 mod setup;
 
+use a_star::AStarPlugin;
+// use a_star::AStarPlugin;
 use bevy::{asset::HandleId, prelude::*, render::texture::ImageSampler};
 use depth_first::{data_from_map, depth_first_search, Map};
 use rand::Rng;
-use setup::SetupPlugin;
+use setup::{SetupPlugin, StartEnd};
 
 const MAP_SIZE: usize = 16;
 const SCREEN_SIZE: Vec2 = Vec2 { x: 800.0, y: 800.0 };
@@ -53,8 +55,10 @@ fn main() {
                 }),
         )
         .add_plugin(SetupPlugin)
+        .add_plugin(AStarPlugin)
         .insert_resource(MazeMapData(image_data))
         .insert_resource(MazeMap(map))
         .insert_resource(ClearColor(Color::BLACK))
+        .insert_resource(StartEnd { start: None, end: None })
         .run();
 }
