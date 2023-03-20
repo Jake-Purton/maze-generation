@@ -28,6 +28,7 @@ pub enum AppState {
 }
 
 fn main() {
+
     let mut map: Map = Map::new(MAP_SIZE);
     let x = rand::thread_rng().gen_range(0..MAP_SIZE);
     let y = rand::thread_rng().gen_range(0..MAP_SIZE);

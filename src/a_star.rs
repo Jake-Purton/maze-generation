@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::AppState;
+use crate::{AppState, setup::StartEnd, MAP_SIZE};
 
 pub struct AStarPlugin;
 
@@ -11,6 +11,7 @@ impl Plugin for AStarPlugin {
         )
         .add_system_set (
             SystemSet::on_update(AppState::AStar)
+                .with_system(a_star)
         )
         .add_system_set (
             SystemSet::on_exit(AppState::AStar)
@@ -18,3 +19,72 @@ impl Plugin for AStarPlugin {
     }
 }
 
+// each node has
+// G cost -> distance from start
+// H cost -> distance from end
+// F cost -> G + H
+
+fn a_star (
+    start_end: Res<StartEnd>,
+) {
+    let vec = find_neighbors(start_end.start.unwrap(), (MAP_SIZE * 8).try_into().unwrap());
+    println!("{:?}", vec)
+}
+
+fn find_neighbors(pixel: (usize, usize), image_width: i32) -> Vec<(usize, usize)> {
+
+    let mut indexes = Vec::new();
+    let pixel_x = pixel.0 as i32;
+    let pixel_y = pixel.1 as i32;
+
+    for x in (0..3).map(|x| x - 1) {
+        for y in (0..3).map(|y| y - 1) {
+            if x == y && x == 0 {
+                continue;
+            } else {
+
+                let new_x = pixel_x + x;
+                let new_y = pixel_y + y;
+
+                if new_x < 0 || pixel_y < 0 || new_x >= image_width || new_y >= image_width {
+                    continue;
+                } else {
+
+                    indexes.push((new_x as usize, new_y as usize))
+                }
+            }
+        }
+    }
+    indexes
+}
+
+fn distance_between_indexes (
+    cell_a: (usize, usize),
+    cell_b: (usize, usize),
+) -> usize {
+    // finds the walkable distance between two indexes in a 1d vector with a width
+    let mut x = 0;
+    let mut y = 0;
+    let mut distance = 0;
+
+    if cell_a.0 > cell_b.0 {
+        x = cell_a.0 - cell_b.0;
+    } else {
+        x = cell_b.0 - cell_a.0;
+    }    
+    
+    if cell_a.1 > cell_b.1 {
+        y = cell_a.1 - cell_b.1;
+    } else {
+        y = cell_b.1 - cell_a.1;
+    }
+
+    if x > y {
+        distance = ((x - y) * 10) + y * 14
+    } else {
+        distance = ((y - x) * 10) + x * 14
+    }
+
+    distance
+
+}
