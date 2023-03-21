@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 
 use crate::{AppState, setup::StartEnd, MAP_SIZE};
 
@@ -8,6 +8,7 @@ impl Plugin for AStarPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_system_set (
             SystemSet::on_enter(AppState::AStar)
+                .with_system(setup)
         )
         .add_system_set (
             SystemSet::on_update(AppState::AStar)
@@ -19,6 +20,37 @@ impl Plugin for AStarPlugin {
     }
 }
 
+#[derive(Debug, Hash, Eq, PartialEq, Clone, Copy)]
+pub struct AStarCell {
+    coordinate: (usize, usize),
+    f: usize,
+}
+
+#[derive(Resource)]
+pub struct SearchedCellsVec (Vec<AStarCell>);
+
+#[derive(Resource)]
+pub struct SearchedCellsSet (HashSet<AStarCell>);
+
+fn setup (
+    mut commands: Commands,
+    start_end: Res<StartEnd>,
+) {
+    let mut set = HashSet::new();
+    let mut vec = Vec::new();
+
+    let start = start_end.start.unwrap();
+    let end = start_end.end.unwrap();
+    let h = distance_between_indexes(start, end);
+    let cell = AStarCell { coordinate: start, f: h };
+
+    vec.push(cell.clone());
+    set.insert(cell);
+
+    commands.insert_resource(SearchedCellsVec(vec));
+    commands.insert_resource(SearchedCellsSet(set));
+}
+
 // each node has
 // G cost -> distance from start
 // H cost -> distance from end
@@ -26,9 +58,18 @@ impl Plugin for AStarPlugin {
 
 fn a_star (
     start_end: Res<StartEnd>,
+    mut searched_vec: ResMut<SearchedCellsVec>,
+    mut searched_set: ResMut<SearchedCellsSet>,
 ) {
-    let vec = find_neighbors(start_end.start.unwrap(), (MAP_SIZE * 8).try_into().unwrap());
-    println!("{:?}", vec)
+
+    searched_vec.0.sort_by_key(|a| a.f);
+
+    let new_cells = find_neighbors(searched_vec[0], MAP_SIZE * 8);
+
+    for i in new_cells {
+        if searched_set.0.len() != searched_set.0.insert(i).len() {
+        }
+    }
 }
 
 fn find_neighbors(pixel: (usize, usize), image_width: i32) -> Vec<(usize, usize)> {
