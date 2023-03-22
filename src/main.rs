@@ -4,7 +4,7 @@ mod setup;
 
 use a_star::AStarPlugin;
 // use a_star::AStarPlugin;
-use bevy::{asset::HandleId, prelude::*, render::texture::ImageSampler};
+use bevy::{asset::HandleId, prelude::*, render::texture::ImageSampler, window::PresentMode};
 use depth_first::{data_from_map, depth_first_search, Map};
 use rand::Rng;
 use setup::{SetupPlugin, StartEnd};
@@ -48,6 +48,7 @@ fn main() {
                         height: SCREEN_SIZE.y,
                         title: "To do".to_string(),
                         resizable: false,
+                        present_mode: PresentMode::AutoNoVsync,
                         ..Default::default()
                     },
                     ..default()

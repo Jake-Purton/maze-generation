@@ -25,7 +25,8 @@ pub struct AStarCell {
     coordinate: (usize, usize),
     f: usize,
     g: usize,
-    came_from: Option<(usize, usize)>
+    came_from: Option<(usize, usize)>,
+    searched: bool,
 }
 
 #[derive(Resource)]
@@ -44,7 +45,7 @@ fn setup (
     let start = start_end.start.unwrap();
     let end = start_end.end.unwrap();
     let h = distance_between_indexes(start, end);
-    let cell = AStarCell { coordinate: start, f: h, g: 0, came_from: None };
+    let cell = AStarCell { coordinate: start, f: h, g: 0, came_from: None, searched: false };
 
     vec.push(cell);
     set.insert(start);
@@ -77,7 +78,16 @@ fn a_star (
 
         searched_vec.0.sort_by_key(|a| a.f);
     
-        let lowest_f_cost = searched_vec.0[0];
+        let mut lowest_f_cost = searched_vec.0[0];
+
+        for searched in searched_vec.0.iter_mut() {
+            if !searched.searched {
+                searched.searched = true;
+                lowest_f_cost = *searched;
+                break;
+            }
+        }
+
         let new_cells = find_neighbors( lowest_f_cost.coordinate, (MAP_SIZE * 8).try_into().unwrap());
 
             for i in new_cells {
@@ -102,6 +112,7 @@ fn a_star (
                         f, 
                         g,
                         came_from: Some(lowest_f_cost.coordinate),
+                        searched: false,
                     });
 
                     image.data[index] = 0;
@@ -111,11 +122,9 @@ fn a_star (
                     
                 } else {
                     for a in &mut searched_vec.0 {
-                        if a.coordinate == i {
-                            if a.f > f {
+                        if a.coordinate == i &&a.f > f {
                                 a.f = f;
                                 a.came_from = Some(lowest_f_cost.coordinate);
-                            }
                         }
                     }
                 }
@@ -124,10 +133,6 @@ fn a_star (
                     
                     let mut current_coordinate = i;
                     let mut should_break = false;
-
-                    println!("{:?}", searched_vec.0);
-                    println!("{:?}", current_coordinate);
-
 
                     while !should_break {
 
@@ -142,26 +147,15 @@ fn a_star (
 
 
                             if a.coordinate.0 as i32 == current_coordinate.0 as i32 && a.coordinate.1 as i32 == current_coordinate.1 as i32 {
-
-                                println!("yes, {:?}", a.coordinate);                                
-
                                 if let Some(last_coordinate) = a.came_from {
                                     current_coordinate = last_coordinate
                                 } else {
                                     should_break = true;
                                 }
-
                                 break;
-
-                            } else {
-                                // println!("no, {:?}", a.coordinate);                                
                             }
-
                         }
-
-                        println!("no match");
                     }
-
                     app_state.set(AppState::Finished).unwrap();
                 }
             }
@@ -201,24 +195,13 @@ fn distance_between_indexes (
     cell_b: (usize, usize),
 ) -> usize {
     // finds the walkable distance between two indexes in a 1d vector with a width
-    let mut x = 0;
-    let mut y = 0;
 
-    if cell_a.0 > cell_b.0 {
-        x = cell_a.0 - cell_b.0;
-    } else {
-        x = cell_b.0 - cell_a.0;
-    }    
-    
-    if cell_a.1 > cell_b.1 {
-        y = cell_a.1 - cell_b.1;
-    } else {
-        y = cell_b.1 - cell_a.1;
-    }
+    let x = (cell_a.0 as i32 - cell_b.0 as i32).abs();  
+    let y = (cell_a.1 as i32 - cell_b.1 as i32).abs();  
 
     if x > y {
-        ((x - y) * 10) + y * 14
+        (((x - y) * 10) + y * 14) as usize
     } else {
-        ((y - x) * 10) + x * 14
+        (((y - x) * 10) + x * 14) as usize
     }
 }
