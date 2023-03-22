@@ -75,9 +75,9 @@ fn a_star (
 
         if let Some(image) = images.get_mut(&handle) {
 
-        searched_vec.0.sort_by_key(|a| -(a.f as i32));
+        searched_vec.0.sort_by_key(|a| a.f);
     
-        let lowest_f_cost = searched_vec.0.pop().unwrap();
+        let lowest_f_cost = searched_vec.0[0];
         let new_cells = find_neighbors( lowest_f_cost.coordinate, (MAP_SIZE * 8).try_into().unwrap());
 
             for i in new_cells {
@@ -140,20 +140,26 @@ fn a_star (
                         
                         for a in &searched_vec.0 {
 
-                            println!("{:?}", a.coordinate);
 
                             if a.coordinate.0 as i32 == current_coordinate.0 as i32 && a.coordinate.1 as i32 == current_coordinate.1 as i32 {
 
-                                print!("yes");
+                                println!("yes, {:?}", a.coordinate);                                
 
                                 if let Some(last_coordinate) = a.came_from {
                                     current_coordinate = last_coordinate
                                 } else {
                                     should_break = true;
                                 }
+
+                                break;
+
+                            } else {
+                                // println!("no, {:?}", a.coordinate);                                
                             }
 
                         }
+
+                        println!("no match");
                     }
 
                     app_state.set(AppState::Finished).unwrap();
