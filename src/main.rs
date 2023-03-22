@@ -25,6 +25,7 @@ pub struct MazeMapId(HandleId);
 pub enum AppState {
     Setup,
     AStar,
+    Finished,
 }
 
 fn main() {

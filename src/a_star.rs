@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{AppState, setup::StartEnd, MAP_SIZE};
+use crate::{AppState, setup::StartEnd, MAP_SIZE, MazeMapId};
 
 pub struct AStarPlugin;
 
@@ -24,13 +24,15 @@ impl Plugin for AStarPlugin {
 pub struct AStarCell {
     coordinate: (usize, usize),
     f: usize,
+    g: usize,
+    came_from: Option<(usize, usize)>
 }
 
 #[derive(Resource)]
 pub struct SearchedCellsVec (Vec<AStarCell>);
 
 #[derive(Resource)]
-pub struct SearchedCellsSet (HashSet<AStarCell>);
+pub struct SearchedCellsSet (HashSet<(usize, usize)>);
 
 fn setup (
     mut commands: Commands,
@@ -42,10 +44,10 @@ fn setup (
     let start = start_end.start.unwrap();
     let end = start_end.end.unwrap();
     let h = distance_between_indexes(start, end);
-    let cell = AStarCell { coordinate: start, f: h };
+    let cell = AStarCell { coordinate: start, f: h, g: 0, came_from: None };
 
-    vec.push(cell.clone());
-    set.insert(cell);
+    vec.push(cell);
+    set.insert(start);
 
     commands.insert_resource(SearchedCellsVec(vec));
     commands.insert_resource(SearchedCellsSet(set));
@@ -55,21 +57,110 @@ fn setup (
 // G cost -> distance from start
 // H cost -> distance from end
 // F cost -> G + H
+// The node it came from (in order to find the path it took)
 
 fn a_star (
     start_end: Res<StartEnd>,
     mut searched_vec: ResMut<SearchedCellsVec>,
+    // buttons: Res<Input<MouseButton>>,
+    mut images: ResMut<Assets<Image>>,
+    id: Res<MazeMapId>,
     mut searched_set: ResMut<SearchedCellsSet>,
+    mut app_state: ResMut<State<AppState>>,
 ) {
+    
+    // if buttons.just_pressed(MouseButton::Left) {
 
-    searched_vec.0.sort_by_key(|a| a.f);
+        let handle = Handle::weak(id.0);
 
-    let new_cells = find_neighbors(searched_vec[0], MAP_SIZE * 8);
+        if let Some(image) = images.get_mut(&handle) {
 
-    for i in new_cells {
-        if searched_set.0.len() != searched_set.0.insert(i).len() {
+        searched_vec.0.sort_by_key(|a| -(a.f as i32));
+    
+        let lowest_f_cost = searched_vec.0.pop().unwrap();
+        let new_cells = find_neighbors( lowest_f_cost.coordinate, (MAP_SIZE * 8).try_into().unwrap());
+
+            for i in new_cells {
+
+                let mut index = i.0 * 4 + (i.1 * MAP_SIZE * 8 * 4);
+                let h = distance_between_indexes(i, start_end.end.unwrap());
+
+                if image.data[index] == 255 
+                && image.data[index + 1] == 255 
+                && image.data[index + 2] == 255 
+                && image.data[index + 3] == 255 
+                {
+                    continue;
+                }
+
+                let g = distance_between_indexes(i, lowest_f_cost.coordinate) + lowest_f_cost.g;
+                let f =  g + h;
+                
+                if searched_set.0.insert(i) {
+                    searched_vec.0.push(AStarCell { 
+                        coordinate: i, 
+                        f, 
+                        g,
+                        came_from: Some(lowest_f_cost.coordinate),
+                    });
+
+                    image.data[index] = 0;
+                    image.data[index + 1] = 255;
+                    image.data[index + 2] = 0;
+                    image.data[index + 3] = 255;
+                    
+                } else {
+                    for a in &mut searched_vec.0 {
+                        if a.coordinate == i {
+                            if a.f > f {
+                                a.f = f;
+                                a.came_from = Some(lowest_f_cost.coordinate);
+                            }
+                        }
+                    }
+                }
+
+                if h == 0 {
+                    
+                    let mut current_coordinate = i;
+                    let mut should_break = false;
+
+                    println!("{:?}", searched_vec.0);
+                    println!("{:?}", current_coordinate);
+
+
+                    while !should_break {
+
+                        index = current_coordinate.0 * 4 + (current_coordinate.1 * MAP_SIZE * 8 * 4);
+
+                        image.data[index] = 255;
+                        image.data[index + 1] = 0;
+                        image.data[index + 2] = 0;
+                        image.data[index + 3] = 255;
+                        
+                        for a in &searched_vec.0 {
+
+                            println!("{:?}", a.coordinate);
+
+                            if a.coordinate.0 as i32 == current_coordinate.0 as i32 && a.coordinate.1 as i32 == current_coordinate.1 as i32 {
+
+                                print!("yes");
+
+                                if let Some(last_coordinate) = a.came_from {
+                                    current_coordinate = last_coordinate
+                                } else {
+                                    should_break = true;
+                                }
+                            }
+
+                        }
+                    }
+
+                    app_state.set(AppState::Finished).unwrap();
+                }
+            }
         }
-    }
+    // }
 }
 
 fn find_neighbors(pixel: (usize, usize), image_width: i32) -> Vec<(usize, usize)> {
@@ -106,7 +197,6 @@ fn distance_between_indexes (
     // finds the walkable distance between two indexes in a 1d vector with a width
     let mut x = 0;
     let mut y = 0;
-    let mut distance = 0;
 
     if cell_a.0 > cell_b.0 {
         x = cell_a.0 - cell_b.0;
@@ -121,11 +211,8 @@ fn distance_between_indexes (
     }
 
     if x > y {
-        distance = ((x - y) * 10) + y * 14
+        ((x - y) * 10) + y * 14
     } else {
-        distance = ((y - x) * 10) + x * 14
+        ((y - x) * 10) + x * 14
     }
-
-    distance
-
 }
