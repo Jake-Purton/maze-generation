@@ -29,7 +29,6 @@ pub enum AppState {
 }
 
 fn main() {
-
     let mut map: Map = Map::new(MAP_SIZE);
     let x = rand::thread_rng().gen_range(0..MAP_SIZE);
     let y = rand::thread_rng().gen_range(0..MAP_SIZE);
@@ -62,6 +61,9 @@ fn main() {
         .insert_resource(MazeMapData(image_data))
         .insert_resource(MazeMap(map))
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(StartEnd { start: None, end: None })
+        .insert_resource(StartEnd {
+            start: None,
+            end: None,
+        })
         .run();
 }
