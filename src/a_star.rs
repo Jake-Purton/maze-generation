@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{setup::StartEnd, AppState, MazeMapId, MAP_SIZE};
+use crate::{setup::StartEnd, AppState, MazeMapId, MAP_SIZE, PIXELS_PER_CELL};
 
 pub struct AStarPlugin;
 
@@ -79,10 +79,10 @@ fn a_star(
         }
 
         let new_cells =
-            find_neighbors(lowest_f_cost.coordinate, (MAP_SIZE * 8).try_into().unwrap());
+            find_neighbors(lowest_f_cost.coordinate, (MAP_SIZE * PIXELS_PER_CELL).try_into().unwrap());
 
         for i in new_cells {
-            let mut index = i.0 * 4 + (i.1 * MAP_SIZE * 8 * 4);
+            let mut index = i.0 * 4 + (i.1 * MAP_SIZE * PIXELS_PER_CELL * 4);
             let h = distance_between_indexes(i, start_end.end.unwrap());
 
             if image.data[index] == 255
@@ -124,7 +124,7 @@ fn a_star(
                 let mut should_break = false;
 
                 while !should_break {
-                    index = current_coordinate.0 * 4 + (current_coordinate.1 * MAP_SIZE * 8 * 4);
+                    index = current_coordinate.0 * 4 + (current_coordinate.1 * MAP_SIZE * PIXELS_PER_CELL * 4);
 
                     image.data[index] = 255;
                     image.data[index + 1] = 0;

@@ -1,5 +1,7 @@
 use rand::Rng;
 
+use crate::PIXELS_PER_CELL;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Cell {
     visited: bool,
@@ -147,14 +149,14 @@ pub fn data_from_map(map: &Map) -> Vec<u8> {
     let mut image: Vec<u8> = Vec::new();
 
     for (_, cells) in map.map.iter().enumerate() {
-        for i in 0..8 {
+        for i in 0..PIXELS_PER_CELL {
             for cell in cells {
-                for a in 0..8 {
+                for a in 0..PIXELS_PER_CELL {
                     if (i == 0 && cell.top)
-                        || (i == 7 && cell.bottom)
+                        || (i == PIXELS_PER_CELL - 1 && cell.bottom)
                         || (a == 0 && cell.left)
-                        || (a == 7 && cell.right)
-                        || ((a == 7 || a == 0) && (i == 7 || i == 0))
+                        || (a == PIXELS_PER_CELL - 1 && cell.right)
+                        || ((a == PIXELS_PER_CELL - 1 || a == 0) && (i == PIXELS_PER_CELL - 1 || i == 0))
                     {
                         image.push(255);
                         image.push(255);

@@ -3,13 +3,13 @@ mod depth_first;
 mod setup;
 
 use a_star::AStarPlugin;
-// use a_star::AStarPlugin;
 use bevy::{asset::HandleId, prelude::*, render::texture::ImageSampler, window::PresentMode};
 use depth_first::{data_from_map, depth_first_search, Map};
 use rand::Rng;
 use setup::{SetupPlugin, StartEnd};
 
-const MAP_SIZE: usize = 16;
+const MAP_SIZE: usize = 8;
+const PIXELS_PER_CELL: usize = 16;
 const SCREEN_SIZE: Vec2 = Vec2 { x: 800.0, y: 800.0 };
 
 #[derive(Resource)]

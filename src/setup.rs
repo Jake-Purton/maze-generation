@@ -3,7 +3,7 @@ use bevy::{
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
 
-use crate::{AppState, MazeMapData, MazeMapId, MAP_SIZE, SCREEN_SIZE};
+use crate::{AppState, MazeMapData, MazeMapId, MAP_SIZE, SCREEN_SIZE, PIXELS_PER_CELL};
 
 pub struct SetupPlugin;
 
@@ -28,8 +28,8 @@ fn setup(mut commands: Commands, data: Res<MazeMapData>, mut images: ResMut<Asse
 
     let mut image = Image::new(
         Extent3d {
-            width: (MAP_SIZE * 8) as u32,
-            height: (MAP_SIZE * 8) as u32,
+            width: (MAP_SIZE * PIXELS_PER_CELL) as u32,
+            height: (MAP_SIZE * PIXELS_PER_CELL) as u32,
             depth_or_array_layers: 1,
         },
         TextureDimension::D2,
@@ -70,10 +70,10 @@ fn click_system(
 
             if let Some(position) = window.cursor_position() {
                 let position = (
-                    position.x as usize * MAP_SIZE / 100,
-                    (window.height() - position.y) as usize * MAP_SIZE / 100,
+                    position.x as usize * MAP_SIZE / (800 / PIXELS_PER_CELL),
+                    (window.height() - position.y) as usize * MAP_SIZE / (800 / PIXELS_PER_CELL),
                 );
-                let index = position.0 + (position.1 * 8 * MAP_SIZE);
+                let index = position.0 + (position.1 * PIXELS_PER_CELL * MAP_SIZE);
                 if image.data[(index * 4) + 3] == 0 {
                     image.data[(index * 4)] = 50;
                     image.data[(index * 4) + 1] = 100;
